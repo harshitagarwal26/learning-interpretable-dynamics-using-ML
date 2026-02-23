@@ -1,0 +1,16 @@
+numpy==1.18.1
+scipy==1.4.1
+matplotlib==3.2.0
+gym==0.17.1
+imageio==2.8.0
+jupyter==1.0.0
+torch==2.1.0
+torchvision==0.16.0
+torchaudio==2.1.0
+pytorch-lightning==1.5.10
+scikit-image==0.16.2
+tensorboard==2.2.0
+torchdiffeq==0.0.1
+pyparsing==2.4.7
+pyvirtualdisplay==2.2
+protobuf==3.20.3

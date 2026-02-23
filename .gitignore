@@ -1,0 +1,15 @@
+__pychche__
+*.pyc
+.vscode/
+.python-version
+logs/
+datasets/
+.ipynb_checkpoints/
+checkpoints/
+figures/
+.venv/
+.DS_Store
+.Trash-0/
+.vl/
+.vlag/
+LICENSE

@@ -1,0 +1,21 @@
+PySR Validation on Unperturbed V_net
+======================================
+
+Average learned M: 0.6914
+True Dynamics Potential Amplitude: -10.3715
+
+PySR Results:
+   complexity       loss                                                                                        equation     score                                                                            sympy_format                                                                                            lambda_format
+0           1  44.616978                                                                                           theta  0.000000                                                                                   theta                                                                                   PySRFunction(X=>theta)
+1           3  36.844612                                                                               theta * 2.5340028  0.095703                                                                         theta*2.5340028                                                                         PySRFunction(X=>theta*2.5340028)
+2           4  21.085217                                                                          sin(theta) * 8.6073265  0.558137                                                                    sin(theta)*8.6073265                                                                    PySRFunction(X=>sin(theta)*8.6073265)
+3           6   0.893865                                                             cos(theta + -321.37772) * 10.695371  1.580386                                                        cos(theta - 321.37772)*10.695371                                                        PySRFunction(X=>cos(theta - 321.37772)*10.695371)
+4           8   0.109077                                            (cos(theta + -412.48428) * -10.694243) + -0.88561004  1.051750                                        cos(theta - 412.48428)*(-10.694243) - 0.88561004                                        PySRFunction(X=>cos(theta - 412.48428)*(-10.694243) - 0.88561004)
+5          10   0.071234                              (cos((theta * 1.0160693) + -10.368108) * -10.724213) + -0.78667575  0.213039                              cos(theta*1.0160693 - 10.368108)*(-10.724213) - 0.78667575                              PySRFunction(X=>cos(theta*1.0160693 - 10.368108)*(-10.724213) - 0.78667575)
+6          11   0.052564                               ((-10.692104 - sin(theta)) * cos(theta + -10.359206)) - 1.2872051  0.303952                          (-sin(theta) - 10.692104)*cos(theta - 10.359206) - 1*1.2872051                          PySRFunction(X=>(-sin(theta) - 10.692104)*cos(theta - 10.359206) - 1*1.2872051)
+7          12   0.040878                           (cos(theta + -271.11133) * (sin(sin(theta)) + 10.693583)) - 1.2392613  0.251423                      (sin(sin(theta)) + 10.693583)*cos(theta - 271.11133) - 1*1.2392613                      PySRFunction(X=>(sin(sin(theta)) + 10.693583)*cos(theta - 271.11133) - 1*1.2392613)
+8          13   0.002087                   (cos(theta + -10.360397) * (sin(-0.6716143 - theta) + -10.693054)) - 1.385356  2.974765               (sin(-theta - 0.6716143) - 10.693054)*cos(theta - 10.360397) - 1*1.385356               PySRFunction(X=>(sin(-theta - 0.6716143) - 10.693054)*cos(theta - 10.360397) - 1*1.385356)
+9          15   0.001453  (((sin(-0.67212164 - theta) * 0.92870516) + -10.692831) * cos(theta + -10.360381)) - 1.3496907  0.180971  (sin(-theta - 0.67212164)*0.92870516 - 10.692831)*cos(theta - 10.360381) - 1*1.3496907  PySRFunction(X=>(sin(-theta - 0.67212164)*0.92870516 - 10.692831)*cos(theta - 10.360381) - 1*1.3496907)
+
+Best Equation Structure (via Elbow Method, Complexity 4.0):
+sin(theta)*8.6073265

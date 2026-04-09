@@ -43,6 +43,55 @@ class MLP(torch.nn.Module):
         return self.linear3(h)
 
 
+class SirenMLP(torch.nn.Module):
+    '''SIREN: MLP with sin activation and proper initialization (Sitzmann et al. 2020).
+    Eliminates spectral bias — represents all frequencies equally.
+    omega_0 controls the frequency range of the first layer.
+    '''
+    def __init__(self, input_dim, hidden_dim, output_dim, omega_0=30.0, bias_bool=True):
+        super(SirenMLP, self).__init__()
+        self.omega_0 = omega_0
+        self.linear1 = torch.nn.Linear(input_dim, hidden_dim)
+        self.linear2 = torch.nn.Linear(hidden_dim, hidden_dim)
+        self.linear3 = torch.nn.Linear(hidden_dim, output_dim, bias=bias_bool)
+
+        # SIREN initialization (Sitzmann et al. 2020)
+        # First layer: uniform(-1/n, 1/n) then scaled by omega_0 inside forward
+        with torch.no_grad():
+            self.linear1.weight.uniform_(-1.0 / input_dim, 1.0 / input_dim)
+            # Hidden layers: uniform(-sqrt(6 / n) / omega_0, sqrt(6 / n) / omega_0)
+            bound2 = np.sqrt(6.0 / hidden_dim) / omega_0
+            self.linear2.weight.uniform_(-bound2, bound2)
+            # Output layer: same as hidden
+            bound3 = np.sqrt(6.0 / hidden_dim) / omega_0
+            self.linear3.weight.uniform_(-bound3, bound3)
+
+    def forward(self, x, separate_fields=False):
+        h = torch.sin(self.omega_0 * self.linear1(x))
+        h = torch.sin(self.omega_0 * self.linear2(h))
+        return self.linear3(h)
+
+
+class MultiScaleMLP(torch.nn.Module):
+    '''Multi-Scale DNN: parallel MLPs at different input scales to overcome spectral bias.
+    V(x) = sum_i MLP_i(scale_i * x). Each sub-network captures a different frequency band.
+    '''
+    def __init__(self, input_dim, hidden_dim, output_dim, scales=(1.0, 3.0, 9.0),
+                 nonlinearity='tanh', bias_bool=True):
+        super(MultiScaleMLP, self).__init__()
+        self.scales = scales
+        self.nets = torch.nn.ModuleList([
+            MLP(input_dim, hidden_dim, output_dim, nonlinearity=nonlinearity, bias_bool=bias_bool)
+            for _ in scales
+        ])
+
+    def forward(self, x, separate_fields=False):
+        out = 0
+        for scale, net in zip(self.scales, self.nets):
+            out = out + net(x * scale)
+        return out
+
+
 class PSD(torch.nn.Module):
     '''A Neural Net which outputs a positive semi-definite matrix'''
     def __init__(self, input_dim, hidden_dim, diag_dim, nonlinearity='tanh'):

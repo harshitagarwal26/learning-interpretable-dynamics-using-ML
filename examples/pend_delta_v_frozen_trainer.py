@@ -64,6 +64,12 @@ class DeltaVFrozenModel(pl.LightningModule):
         # delta_V_net: same input space as V_net (cos_q, sin_q) → scalar
         delta_V_net = MLP(2, self.hparams.delta_v_hidden, 1, nonlinearity='tanh')
 
+        # Initialize output layer near zero so delta_V starts as "no perturbation"
+        # and gradually learns only the needed correction (residual learning)
+        with torch.no_grad():
+            delta_V_net.linear3.weight.mul_(0.01)
+            delta_V_net.linear3.bias.mul_(0.01)
+
         self.ode = Lag_Net_DeltaV(
             q_dim=1, u_dim=1,
             g_net=g_net, M_net=M_net, V_net=V_net,
@@ -200,12 +206,21 @@ class DeltaVFrozenModel(pl.LightningModule):
         kl_q = torch.distributions.kl.kl_divergence(self.Q_q, self.P_q).mean()
         norm_penalty = (self.q0_m.norm(dim=-1).mean() - 1) ** 2
 
+        # Zero-mean regularization: penalize DC offset in delta_V_net
+        # The potential is defined up to a constant, so force zero mean
+        if hasattr(self.ode, 'delta_V_q') and self.ode.delta_V_q is not None:
+            zm_reg = self.ode.delta_V_q.mean() ** 2
+        else:
+            zm_reg = torch.tensor(0.0)
+
         lambda_ = self.current_epoch / 8000 if self.hparams.annealing else 1 / 100
-        loss = -lhood + kl_q + lambda_ * norm_penalty
+        zm_weight = getattr(self.hparams, 'zm_lambda', 10.0)
+        loss = -lhood + kl_q + lambda_ * norm_penalty + zm_weight * zm_reg
 
         logs = {
             'recon_loss': -lhood,
             'kl_q_loss': kl_q,
+            'zm_reg': zm_reg,
             'train_loss': loss,
             'monitor': -lhood + kl_q,
         }
@@ -223,6 +238,8 @@ class DeltaVFrozenModel(pl.LightningModule):
         parser.add_argument('--batch_size', default=512, type=int)
         parser.add_argument('--delta_v_hidden', default=50, type=int,
                             help='Hidden dim for delta_V_net (default: 50, same as V_net)')
+        parser.add_argument('--zm_lambda', default=10.0, type=float,
+                            help='Zero-mean regularization weight for delta_V_net')
         return parser
 
 

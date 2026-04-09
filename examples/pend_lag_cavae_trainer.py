@@ -317,7 +317,7 @@ class Model(pl.LightningModule):
         loss = - lhood + kl_q + lambda_ * norm_penalty
 
         logs = {'recon_loss': -lhood, 'kl_q_loss': kl_q, 'train_loss': loss, 'monitor': -lhood+kl_q}
-        self.log("monitor", logs["monitor"], on_step=False, on_epoch=True, batch_size=self.hparams.batch_size)
+        # self.log("monitor", logs["monitor"], on_step=False, on_epoch=True, batch_size=self.hparams.batch_size)
         return {'loss':loss, 'log': logs, 'progress_bar': logs}
 
     def configure_optimizers(self):
@@ -337,17 +337,28 @@ class Model(pl.LightningModule):
 
 
 def main(args):
-    model = Model(hparams=args, data_path=os.path.join(PARENT_DIR, 'datasets', 'pendulum-gym-image-dataset-train.pkl'))
-    checkpoint_callback = ModelCheckpoint(monitor='monitor', 
-                                          filename=args.name + f'-T_p={args.T_pred}' + '-{epoch}-{step}', 
-                                          save_top_k=1, 
-                                          save_last=True,
-                                          save_on_train_epoch_end=True)
-    trainer = Trainer.from_argparse_args(args, 
-                                         deterministic=False,
-                                         default_root_dir=os.path.join(PARENT_DIR, 'logs', args.name),
-                                         callbacks=[checkpoint_callback],
-                                         enable_checkpointing=True) 
+    model = Model(hparams=args, data_path=os.path.join(PARENT_DIR, 'datasets', 'pendulum-gym-image-dataset-train-reverse-angle-stable-down-2.pkl'))
+    # checkpoint_callback = ModelCheckpoint(monitor='monitor', 
+    #                                       filename=args.name + f'-T_p={args.T_pred}' + '-{epoch}-{step}', 
+    #                                       save_top_k=1, 
+    #                                       save_last=True,
+    #                                       save_on_train_epoch_end=True)
+    checkpoint_callback = ModelCheckpoint(monitor='monitor',
+                                      filepath=os.path.join(PARENT_DIR, 'logs', args.name,
+                                                            args.name + f'-T_p={args.T_pred}'),
+                                      save_top_k=1,
+                                      save_last=True)
+
+    # trainer = Trainer.from_argparse_args(args, 
+    #                                      deterministic=False,
+    #                                      default_root_dir=os.path.join(PARENT_DIR, 'logs', args.name),
+    #                                      callbacks=[checkpoint_callback],
+    #                                      enable_checkpointing=True) 
+    trainer = Trainer.from_argparse_args(args,
+                                     deterministic=False,
+                                     default_root_dir=os.path.join(PARENT_DIR, 'logs', args.name),
+                                     checkpoint_callback=checkpoint_callback)
+
     trainer.fit(model)
 
 
